@@ -83,10 +83,18 @@ class FlutterBluetoothPrinter {
       imageData = generator.image(src);
     }
 
-    final additional = [
-      ...generator.emptyLines(addFeeds),
-      ...generator.text('.'),
-    ];
+    // final additional = [
+    //   ...generator.emptyLines(addFeeds),
+    //   ...generator.text('.'),
+    // ];
+
+    final additional = paperSize == PaperSize.mm58
+        ? <int>[
+            for (int i = 0; i < addFeeds; i++) ...[0x0D]
+          ]
+        : <int>[
+            for (int i = 0; i < addFeeds; i++) ...[0x0A]
+          ];
 
     return printBytes(
       keepConnected: keepConnected,
