@@ -104,6 +104,7 @@ class FlutterBluetoothPrinter {
         ...imageData,
         ...generator.reset(),
         ...additional,
+        ...[0x1D, 0x56, 0x00] // Cut paper
       ]),
       onProgress: onProgress,
     );
