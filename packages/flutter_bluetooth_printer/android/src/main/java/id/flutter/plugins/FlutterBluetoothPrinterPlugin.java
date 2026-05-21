@@ -278,6 +278,10 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
                             String address = call.argument("address");
                             boolean keepConnected = call.argument("keep_connected");
                             byte[] data = call.argument("data");
+                            Integer maxBufferSizeArg = call.argument("max_buffer_size");
+                            Integer delayTimeArg = call.argument("delay_time");
+                            int maxBufferSize = (maxBufferSizeArg != null) ? maxBufferSizeArg : 512;
+                            int delayTime = (delayTimeArg != null) ? delayTimeArg : 120;
 
                             BluetoothSocket bluetoothSocket = connectedDevices.get(address);
                             if (bluetoothSocket == null) {
@@ -301,11 +305,19 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
 
                                 updatePrintingProgress(data.length, 0);
 
-                                // req get printer status
-                                writeStream.write(data);
-                                writeStream.flush();
-
-                                updatePrintingProgress(data.length, data.length);
+                                // Write data in chunks to avoid printer buffer overflow
+                                int offset = 0;
+                                int chunkSize = Math.min(maxBufferSize, 512);
+                                while (offset < data.length) {
+                                    int end = Math.min(offset + chunkSize, data.length);
+                                    writeStream.write(data, offset, end - offset);
+                                    writeStream.flush();
+                                    offset = end;
+                                    updatePrintingProgress(data.length, offset);
+                                    if (offset < data.length) {
+                                        Thread.sleep(delayTime);
+                                    }
+                                }
 
                                 if (!keepConnected) {
                                     inputStream.close();
